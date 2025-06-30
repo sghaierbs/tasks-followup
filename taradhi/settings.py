@@ -86,13 +86,13 @@ WSGI_APPLICATION = 'taradhi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-<<<<<<< HEAD
+
         'NAME': 'django',
         'USER': 'django',
-=======
+
         'NAME': 'taradhidb',
         'USER': 'taradhi',
->>>>>>> 69e2021c8f611eaf06115ad7023a7319632ede3f
+
         'PASSWORD': 'Nevermind007',
         'HOST': 'localhost',
         'PORT': '5432',  # Default PostgreSQL port
