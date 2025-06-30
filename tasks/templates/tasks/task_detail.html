@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% load task_extras %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">{{ object.title }}</h2>
+      
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-8">
+          {{ object.description|default:"No description available." }}
+        </div>
+        <div class="col-md-4">          
+          <div class="col-md-12">
+            <ul class="list-group list-group-flush mb-3">
+              <li class="list-group-item mb-4">
+                <strong>Assignee:</strong>
+                {% if object.assignee %}
+                  <span class="badge text-dark">{{object.assignee}}</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">-</span>
+                {% endif %}
+              </li>
+              <li class="list-group-item mb-4">
+                <strong>Status:</strong>
+                {% if object.status %}
+                  <span class="badge {{ task.status|status_class }}">{{object.status}}</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% endif %}
+              </li>
+              <li class="list-group-item mb-4">
+                <strong>Classification:</strong>
+                {% if object.classification %}
+                  <span class="badge text-dark">{{object.classification}}</span>
+                {% else %}
+                  <span class="badge">-</span>
+                {% endif %}
+              </li>
+              <li class="list-group-item mb-4">
+                <strong>Urgency:</strong>
+                {% if object.urgency %}
+                  <span class="badge text-dark">{{object.urgency}}</span>
+                {% else %}
+                  <span class="badge">-</span>
+                {% endif %}
+              </li>
+              <li class="list-group-item mb-4">
+                <strong>Is completed:</strong>
+                {% if object.is_completed %}
+                  <span class="badge">{{ object.is_completed|yesno:"✅,❌" }}</span>
+                {% else %}
+                  <span class="badge text-dark">-</span>
+                {% endif %}
+              </li>
+              
+              <li class="list-group-item mb-4">
+                <strong>Visibility:</strong> 
+                {% if task.visibility == 'public' %}
+                  <span class="badge bg-success">{{task.visibility}}</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{task.visibility}}</span>
+                {% endif %}
+              </li>
+
+              <li class="list-group-item mb-4">
+                <strong>Due Date:</strong> 
+                <span class="badge text-dark">{{ object.due_date|date:"d/m/Y" }}</span>
+              </li>
+              {% if object.completed_at %}
+              <li class="list-group-item mb-4">
+                <strong>Completed At:</strong> 
+                <span class="badge text-dark">{{object.completed_at}}</span>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-6 mt-4">
+          <a href="{% url 'task-list' %}" class="btn btn-secondary">← Back to Task List</a>
+          <a href="{% url 'task-edit' task.pk %}" class="btn btn-primary me-2">Edit</a>
+        </div>
+        <div class="col-md-6 mt-4">
+          {% if not object.is_completed %}
+          <form method="post" action="{% url 'task-resolve' task.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-success" title="Mark as Resolved">
+              <i class="bi bi-check-circle-fill"> Mark as done</i>
+            </button>
+          </form>
+          {% endif %}
+          {% if not object.is_archived%}
+          <form method="post" action="{% url 'task-archive' task.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-warning" title="Archive Task">
+              <i class="bi bi-archive-fill"> Archive</i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6"> 
+          <div class="card-body">
+            <h5 class="card-title">Comments</h5>
+            <div class="row">
+              <div class="col-md-12"> 
+                comments content
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card-body">
+            <h5 class="card-title">Events</h5>
+            <div class="row">
+              <div class="col-md-12"> 
+                <div class="timeline border-start border-2 ps-3">
+                  {% for event in task.events.all %}
+                    <div class="mb-3">
+                      <small class="text-muted">{{ event.timestamp|date:"M d, Y H:i" }}</small>
+                      <p class="mb-1">
+                        <strong>{{ event.actor }}</strong> {{ event.action|capfirst }}
+                        {% if event.notes %} – <em>{{ event.notes }}</em>{% endif %}
+                      </p>
+                    </div>
+                  {% empty %}
+                    <p class="text-muted">No events recorded.</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}
