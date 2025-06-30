@@ -23,7 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*=(_z8p7vx-x5i37@mi(xvve!8&0vta*7zp$42qj5u_s6a^))l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = False
+
+#DEBUG = True
+
 
 #ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['*']
@@ -82,8 +86,13 @@ WSGI_APPLICATION = 'taradhi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+<<<<<<< HEAD
         'NAME': 'django',
         'USER': 'django',
+=======
+        'NAME': 'taradhidb',
+        'USER': 'taradhi',
+>>>>>>> 69e2021c8f611eaf06115ad7023a7319632ede3f
         'PASSWORD': 'Nevermind007',
         'HOST': 'localhost',
         'PORT': '5432',  # Default PostgreSQL port
