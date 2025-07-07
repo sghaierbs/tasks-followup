@@ -46,7 +46,7 @@ class ArchivedTaskListView(LoginRequiredMixin, ListView):
         return Task.objects.filter((Q(visibility='public') | Q(created_by=user)) & Q(is_archived=True)).order_by('-created_at')
 
 
-class TaskDetailView(FormMixin, DetailView, CommentableObjectMixin):
+class TaskDetailView(LoginRequiredMixin, FormMixin, DetailView, CommentableObjectMixin):
     model = Task
     form_class = TaskForm
     template_name = 'tasks/task_detail.html'
@@ -115,7 +115,7 @@ class TaskCreateView(LoginRequiredMixin, EventLoggingMixin, CreateView):
         return response
     
 
-class UserTaskListView(ListView):
+class UserTaskListView(LoginRequiredMixin, ListView):
     model = Task
     template_name = 'tasks/task_list.html'
     context_object_name = 'tasks'
@@ -135,7 +135,7 @@ class TaskDeleteView(LoginRequiredMixin, View):
     
 
 
-class UserPrivateTaskListView(ListView):
+class UserPrivateTaskListView(LoginRequiredMixin, ListView):
     model = Task
     template_name = 'tasks/task_list.html'
     context_object_name = 'tasks'
@@ -147,7 +147,7 @@ class UserPrivateTaskListView(ListView):
         return Task.objects.filter(Q(visibility='private') & Q(created_by=user))
     
 
-class TaskSearchView(ListView):
+class TaskSearchView(LoginRequiredMixin, ListView):
     model = Task
     template_name = 'tasks/task_list.html'
     context_object_name = 'tasks'
