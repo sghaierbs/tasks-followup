@@ -1,1 +1,93 @@
 venv/
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django migrations (optional: you may want to keep migrations in repo)
+**/migrations/
+!**/migrations/__init__.py
+
+# Environment variables
+.env
+*.env
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Static files collected by collectstatic
+/staticfiles/
+/static/
+
+# Media files uploaded by users (optional)
+media/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Unit test / pytest cache
+.pytest_cache/
+
+# mypy type checker
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pipenv
+Pipfile.lock
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# Django secret key file (if any)
+secret_key.txt
+
+# local settings
+local_settings.py
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# dotenv
+.env.*
+
+# Docker
+docker-compose.override.yml
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+
+# SQLite DB if you don’t want to commit it
+db.sqlite3
+
