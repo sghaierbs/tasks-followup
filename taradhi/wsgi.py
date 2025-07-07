@@ -11,6 +11,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'taradhi.settings')
+#os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'taradhi.settings')
+if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.prod'  # default production for WSGI
 
 application = get_wsgi_application()

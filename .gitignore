@@ -91,3 +91,4 @@ logs/
 # SQLite DB if you don’t want to commit it
 db.sqlite3
 
+.env
