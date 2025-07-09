@@ -12,6 +12,7 @@ SECRET_KEY = 'your-default-secret-key'  # override in prod with env var
 INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'tasks.apps.TasksConfig',
+    'snippets.apps.SnippetsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

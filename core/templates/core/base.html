@@ -26,11 +26,10 @@
 
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link active" href="{% url 'task-list' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link {% if 'home' in request.resolver_match.url_name %}active{% endif %}"  href="{% url 'home' %}">Home</a></li>
                     {% if request.user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'archived-task-list' %}">Archived</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'user_tasks' username=request.user.username %}">Assignments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'private_tasks' username=request.user.username %}">Private tasks</a></li>
+                        <li class="nav-item"><a class="nav-link {% if 'task' in request.resolver_match.url_name %}active{% endif %}"  href="{% url 'task-list' %}">Tasks</a></li>
+                        <li class="nav-item"><a class="nav-link {% if 'snippet' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'snippet-list' %}">Snippets</a></li>
                     {% endif %}
                 </ul>
 
@@ -67,18 +66,18 @@
     </div>
     <nav class="mobile-bottom-nav d-md-none fixed-bottom bg-white border-top shadow-sm">
         <div class="d-flex justify-content-around text-center my-20">
-          <a href="{% url 'task-list' %}" class="flex-fill nav-link text-dark small border">
+          <a href="{% url 'home' %}" class="flex-fill nav-link text-dark small border">
             <i class="bi bi-house-door-fill fs-5 d-block"></i>
             Home
           </a>
           {% if request.user.is_authenticated %}
-          <a href="{% url 'user_tasks' username=request.user.username %}" class="flex-fill nav-link text-dark small border">
-            <i class="bi bi-person-lines-fill fs-5 d-block"></i>
-            Assignments
-          </a>
-          <a href="{% url 'private_tasks' username=request.user.username %}" class="flex-fill nav-link text-dark small border">
+          <a href="{% url 'task-list' %}" class="flex-fill nav-link text-dark small border">
             <i class="bi bi-file-earmark-lock-fill fs-5 d-block"></i>
-            Private tasks
+            Tasks
+          </a>
+          <a href="{% url 'snippet-list' %}" class="flex-fill nav-link text-dark small border">
+            <i class="bi bi-person-lines-fill fs-5 d-block"></i>
+            Snippets
           </a>
           {% endif %}
         </div>

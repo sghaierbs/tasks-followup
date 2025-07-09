@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load snippet_extras %}
+
+{% block extra_head %}
+  <!-- Better Highlight.js Theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    pre code.hljs {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      background: #1e1e1e;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .copy-btn:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">{{ object.title }}</h2>
+
+      <div class="row mt-4">
+        <div class="col-md-8">
+          {% if object.description %}
+            <p>{{ object.description|linebreaksbr }}</p>
+          {% else %}
+            <p class="text-muted">No description available.</p>
+          {% endif %}
+
+          <div class="position-relative">
+            <button class="copy-btn" title="Copy to clipboard">
+              <i class="bi bi-clipboard"></i>
+            </button>
+            <pre><code class="hljs language-{{ object.category|lower }}">{{ object.code|escape }}</code></pre>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item mb-3">
+              <strong>Category:</strong> 
+              <span class="badge bg-primary text-light">{{ object.get_category_display }}</span>
+            </li>
+            <li class="list-group-item mb-3">
+              <strong>Tags:</strong> 
+              {% if object.tags %}
+                {% for tag in object.tags|split:"," %}
+                  <span class="badge bg-secondary me-1">{{ tag }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">No tags</span>
+              {% endif %}
+            </li>
+            <li class="list-group-item mb-3">
+              <strong>Created By:</strong> {{ object.created_by }}
+            </li>
+            <li class="list-group-item mb-3">
+              <strong>Created At:</strong> {{ object.created_at|date:"M d, Y H:i" }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <a href="{% url 'snippet-list' %}" class="btn btn-secondary me-2 ms-2">← Back to Snippets</a>
+          <a href="{% url 'snippet-edit' object.pk %}" class="btn btn-primary me-2">Edit</a>
+          <a href="{% url 'snippet-delete' object.pk %}" class="btn btn-danger">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <!-- Highlight.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+  <!-- Clipboard Copy Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".copy-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+          const codeBlock = button.nextElementSibling.querySelector("code");
+          navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+            button.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+              button.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 1500);
+          });
+        });
+      });
+    });
+  </script>
+{% endblock %}

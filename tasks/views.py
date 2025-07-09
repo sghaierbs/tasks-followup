@@ -34,16 +34,6 @@ class TaskListView(LoginRequiredMixin, ListView):
         context['status_set'] = TrackableStatus.objects.all()
         context['current_filter'] = self.request.GET.get('filter', 'all')
         return context
-    
-class ArchivedTaskListView(LoginRequiredMixin, ListView):
-    model = Task
-    template_name = 'tasks/archived_task_list.html'
-    paginate_by = 15
-
-
-    def get_queryset(self):
-        user = self.request.user
-        return Task.objects.filter((Q(visibility='public') | Q(created_by=user)) & Q(is_archived=True)).order_by('-created_at')
 
 
 class TaskDetailView(LoginRequiredMixin, FormMixin, DetailView, CommentableObjectMixin):
@@ -115,17 +105,6 @@ class TaskCreateView(LoginRequiredMixin, EventLoggingMixin, CreateView):
         return response
     
 
-class UserTaskListView(LoginRequiredMixin, ListView):
-    model = Task
-    template_name = 'tasks/task_list.html'
-    context_object_name = 'tasks'
-    paginate_by = 5
-
-    def get_queryset(self):
-        username = self.kwargs['username']
-        return Task.objects.filter(assignee__username=username)
-    
-
 class TaskDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         task = get_object_or_404(Task, pk=pk)
@@ -133,18 +112,6 @@ class TaskDeleteView(LoginRequiredMixin, View):
             task.delete()
         return redirect('task-list')
     
-
-
-class UserPrivateTaskListView(LoginRequiredMixin, ListView):
-    model = Task
-    template_name = 'tasks/task_list.html'
-    context_object_name = 'tasks'
-    paginate_by = 5
-
-    
-    def get_queryset(self):
-        user = self.request.user
-        return Task.objects.filter(Q(visibility='private') & Q(created_by=user))
     
 
 class TaskSearchView(LoginRequiredMixin, ListView):
