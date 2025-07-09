@@ -4,9 +4,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Django migrations (optional: you may want to keep migrations in repo)
-**/migrations/
-!**/migrations/__init__.py
 
 # Environment variables
 .env
