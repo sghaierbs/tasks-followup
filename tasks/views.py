@@ -3,6 +3,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+
+from stories.models import UserStory
 from .models import Task
 from .forms import TaskForm
 from .mixins import EventLoggingMixin
@@ -12,6 +14,54 @@ from core.mixins import CommentableObjectMixin
 from django.views.generic.edit import FormMixin
 from core.forms import CommentForm
 from django.urls import reverse
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from notifications.utils import create_and_send_notification
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def task_create_ajax(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        story_id = request.GET.get('story_id')
+        story = UserStory.objects.get(id=story_id)
+
+        task = Task.objects.create(title=title, description=description, story=story)
+        return JsonResponse({
+            'id': task.id,
+            'title': task.title,
+            'description': task.description
+        })
+
+class TaskCreateAjaxView(CreateView):
+    model = Task
+    form_class = TaskForm
+
+    def form_valid(self, form):
+        story_id = self.request.POST.get('story_id')
+        form.instance.user_story_id = story_id
+        print("---------------------- ", form)
+        form.instance.created_by = self.request.user
+        task = form.save()
+        print("---------------------- created tak ", task)
+        
+        return JsonResponse({
+            'id': task.id,
+            'title': task.title,
+            'status': task.status.id,
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({'errors': form.errors}, status=400)
+
+
+
+class TaskProgressView(LoginRequiredMixin, ListView):
+    model = Task
+    template_name = 'tasks/progress_view.html'
 
 
 class TaskListView(LoginRequiredMixin, ListView):
@@ -81,7 +131,17 @@ class TaskUpdateView(LoginRequiredMixin, EventLoggingMixin, UpdateView):
             instance=self.object,
             notes="User updated the task"
         )
+        for assignee in self.object.assignees.all():
+            create_and_send_notification(
+                user=assignee,
+                created_by=self.request.user,
+                notif_type="task",
+                title="Task updated",
+                message=f"{self.request.user.get_full_name()} updated the following task: #{self.object.id}",
+                related_object=self.object
+            )
         return response
+
     
 class TaskCreateView(LoginRequiredMixin, EventLoggingMixin, CreateView):
     model = Task
@@ -90,10 +150,21 @@ class TaskCreateView(LoginRequiredMixin, EventLoggingMixin, CreateView):
 
 
     def get_success_url(self):
+        for assignee in self.object.assignees.all():
+            print(f"------ get_success_url ")
+            create_and_send_notification(
+                user=assignee,
+                created_by=self.request.user,
+                notif_type="task",
+                title="You have been assigned a new task",
+                message=f"{self.request.user.get_full_name()} assigned you the task: #{self.object.id}",
+                related_object=self.object
+            )
         return reverse_lazy('task-detail', kwargs={'pk': self.object.pk})
 
 
     def form_valid(self, form):
+        print(f"------ form_valid ")
         form.instance.created_by = self.request.user
         response = super().form_valid(form)
         self.log_event(
@@ -103,6 +174,13 @@ class TaskCreateView(LoginRequiredMixin, EventLoggingMixin, CreateView):
             notes="User created a new task"
         )
         return response
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # this will be used by the task forms.py in order to set the default value of assignee to the current logged in user
+        kwargs['user'] = self.request.user
+        print(f"------ get_form_kwargs ")
+        return kwargs
     
 
 class TaskDeleteView(LoginRequiredMixin, View):

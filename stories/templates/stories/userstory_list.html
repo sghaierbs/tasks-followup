@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load filters %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>User Stories</h2>
+    <a href="{% url 'userstory-create' %}" class="btn btn-primary">+ Create</a>
+</div>
+
+<ul class="list-group">
+    {% for story in stories %}
+        <li class="list-group-item d-flex justify-content-between">
+            <span>
+                <a href="{% url 'userstory-detail' story.pk %}">{{ story.title|truncate:90 }} </a>
+            </span>
+            <div>
+                <a href="{% url 'userstory-update' story.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <a href="{% url 'userstory-delete' story.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </div>
+        </li>
+    {% empty %}
+        <li class="list-group-item text-muted">No user stories found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

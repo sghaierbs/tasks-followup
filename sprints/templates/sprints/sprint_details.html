@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title mb-4">Sprint Details</h2>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Name:</div>
+        <div class="col-md-8">{{ sprint.name }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Planned Start Date:</div>
+        <div class="col-md-8">{{ sprint.planned_start_date }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Planned End Date:</div>
+        <div class="col-md-8">{{ sprint.planned_end_date }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Start Date:</div>
+        <div class="col-md-8">{{ sprint.start_date }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">End Date:</div>
+        <div class="col-md-8">{{ sprint.end_date }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Is Current:</div>
+        <div class="col-md-8">{{ sprint.is_current|yesno:"Yes,No" }}</div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-4 fw-bold">Goal:</div>
+        <div class="col-md-8">{{ sprint.goal|linebreaksbr }}</div>
+      </div>
+
+      <div class="mt-4">
+        <a href="{% url 'manage-sprints' %}" class="btn btn-secondary me-2">
+          <i class="bi bi-arrow-left-square me-1"></i>Back to List
+        </a>
+        <a href="{% url 'sprint-update' sprint.id %}" class="btn btn-warning me-2">
+          <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{% url 'sprint-delete' sprint.id %}" class="btn btn-danger">
+          <i class="bi bi-trash"></i> Delete
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

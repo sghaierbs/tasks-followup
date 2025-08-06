@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+{% load static %}
+{% load group_filters %}
+{% load task_extras %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title" dir="auto">{{ object.title|slice:":90" }}{% if object.title|length > 90 %}...{% endif %}</h2>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-8" dir="auto">
+          {{ object.description|default:"No description available."|linebreaksbr }}
+        </div>
+        <div class="col-md-4">          
+          <div class="col-md-12">
+            <ul class="list-group list-group-flush mb-3">
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-people me-2"></i>
+                  <span class="fs-6">Assignee:</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.assignee %}
+                      <div class="d-flex flex-wrap align-items-center">
+                          {% with object.assignee.first_name|slice:":1" as first %}
+                          {% with object.assignee.last_name|slice:":1" as last %}
+                          <div class="me-1 text-center">
+                            <div class="avatar" title="{{ object.assignee.get_full_name }}">{{ first }}{{ last }}</div>
+                          </div>
+                          {% endwith %}
+                          {% endwith %}
+                      </div>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span class="fs-6">Status</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.status %}
+                      <span class="badge bg-warning text-dark">{{object.status}}</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-exclamation-diamond me-2"></i>
+                    <span class="fs-6">Urgency</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.urgency %}
+                      <span class="badge text-dark">{{object.urgency}}</span>
+                    {% else %}
+                      <span class="badge">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>   
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span class="fs-6">Start date</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.planned_start_date %}
+                      <span class="badge text-dark">{{ object.planned_start_date|date:"d-m-Y" }}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+              
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar2-check me-2"></i>
+                    <span class="fs-6">End date</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.planned_start_date %}
+                    <span class="badge text-dark">{{object.planned_end_date|date:"d-m-Y"}}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+
+              <!-- Actual start date end date -->
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span class="fs-6">Actual start date</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.start_date %}
+                      <span class="badge text-dark">{{ object.start_date|date:"d-m-Y" }}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+              
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar2-check me-2"></i>
+                    <span class="fs-6">Actaul end date</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.start_date %}
+                    <span class="badge text-dark">{{object.end_date|date:"d-m-Y"}}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+              
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span class="fs-6">Sprint</span>
+                  </div>
+                  <div class="col text-left">
+                    <span class="badge bg-warning text-dark">{{ object.sprint.name }}</span> 
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-6 mt-4">
+          <!-- <a href="{% url 'task-list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-square me-2"></i> Back to Task List</a> -->
+          <a href="{% url 'current-sprint' %}?sprint={{ object.sprint.pk }}" class="btn btn-secondary me-2"><i class="bi bi-arrow-left-square me-2"></i> Back</a>
+          <a href="{% url 'userstory-update' object.pk %}" class="btn btn-primary me-2"><i class="bi bi-pencil me-2"></i> Edit</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="container mt-5">
+  <h4>Assignments</h4>
+  {% if request.user|has_group:"sprint_manager" %}
+  <div class="card shadow-sm">
+      <div class="card-body">
+        <form id="assignment-form" method="POST">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="id_assignment_type" class="form-label">{{ assignment_form.assignment_type.label_tag }}</label>
+                  {{ assignment_form.assignment_type }}
+                </div>
+                <div class="col-md-6">
+                  <label for="id_assignee" class="form-label">{{ assignment_form.assignee.label_tag }}</label>
+                  {{ assignment_form.assignee }}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="id_status" class="form-label">{{ assignment_form.status.label_tag }}</label>
+                  {{ assignment_form.status }}
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_completion" class="form-label">{{ assignment_form.completion.label_tag }}</label>
+                  {{ assignment_form.completion }}
+                </div>
+
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="id_planned_start_date" class="form-label">{{ assignment_form.planned_start_date.label_tag }}</label>
+                  {{ assignment_form.planned_start_date }}
+                </div>
+                <div class="col-md-6">
+                  <label for="id_planned_end_date" class="form-label">{{ assignment_form.planned_end_date.label_tag }}</label>
+                  {{ assignment_form.planned_end_date }}
+                </div>
+              </div>
+              <div class="row mt-4">
+                <div class="col-md-6">
+                  <label for="id_start_date" class="form-label">{{ assignment_form.start_date.label_tag }}</label>
+                  {{ assignment_form.start_date }}
+                </div>
+                <div class="col-md-6">
+                  <label for="id_end_date" class="form-label">{{ assignment_form.end_date.label_tag }}</label>
+                  {{ assignment_form.end_date }}
+                </div>
+              </div>
+            </div>
+            
+            <input type="hidden" name="user_story_id" value="{{ object.id }}">
+            <div class="col-md-12 mt-2">
+              <button type="submit" id="add-btn" class="btn btn-success">Add Assignment</button>
+              <button type="submit" id="update-btn" class="btn btn-primary d-none">Update</button>
+              <button type="button" id="cancel-btn" class="btn btn-secondary d-none">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+  </div>
+
+  {% endif %}
+  <div id="assignment-error" class="alert alert-danger d-none" role="alert"></div>
+  <table id="assignment-table" class="table  mt-4 table-bordered sortable">
+    <thead>
+      <tr>
+        {% if request.user|has_group:"sprint_manager" %}
+        <th style="width: 30px;"></th> <!-- Drag handle column -->
+        {% endif %}
+        <th>Type</th>
+        <th>Status</th>
+        <th>Assignee</th>
+        <th>Completion (%)</th>
+        <th>Planned start date</th>
+        <th>Planned end date</th>
+        <th>Start date</th>
+        <th>End date</th>
+        {% if request.user|has_group:"sprint_manager" %}
+          <th>Actions</th>
+        {% endif %}  
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Loaded via AJAX -->
+      {% for assignment in assignments %}
+      <tr data-id="{{ assignment.id }}">
+        {% if request.user|has_group:"sprint_manager" %}
+        <td class="drag-handle text-center" style="cursor: pointer;">≡</td>
+        {% endif %}
+        <td>{{ assignment.get_assignment_type_display }}</td>
+        <td data-label="status">{{ assignment.status }}</td>
+        <td>
+          {% if assignment.assignee %}
+              <div class="d-flex flex-wrap align-items-center">
+                {% with assignment.assignee.first_name|slice:":1" as first %}
+                {% with assignment.assignee.last_name|slice:":1" as last %}
+                <div class="me-1 text-center">
+                  <div class="avatar" title="{{ assignment.assignee.get_full_name }}">{{ first }}{{ last }}</div>
+                </div>
+                {% endwith %}
+                {% endwith %}
+              </div>
+          {% else %}
+                <span class="badge bg-warning text-dark">-</span>
+          {% endif %}
+        </td>
+        <td>{{ assignment.completion }}%</td>
+        <td>{{ assignment.planned_start_date|date:"d-m-Y" }}</td>
+        <td>{{ assignment.planned_end_date|date:"d-m-Y" }}</td>
+        <td data-label="start-date">{{ assignment.start_date|date:"d-m-Y" }}</td>
+        <td data-label="end-date">{{ assignment.end_date|date:"d-m-Y" }}</td>
+        {% if request.user|has_group:"sprint_manager" %}
+          <td>
+            <button class="btn btn-sm btn-primary edit-btn">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+          </td>
+        {% endif %}
+        <td>
+          {% if assignment.assignee == request.user %}
+              {% if assignment.status == 'pending' %}
+                <button class="btn btn-sm btn-primary start-btn">Start</button>
+              {% elif assignment.status == 'started' %}
+                <button class="btn btn-sm btn-danger mark-as-done-btn">Mark as done</button>
+              {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+ 
+  document.addEventListener('DOMContentLoaded', function () {
+    const tableBody = document.querySelector('#assignment-table tbody');
+
+    // Make table rows sortable
+    new Sortable(tableBody, {
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd: function () {
+        const order = [...tableBody.querySelectorAll('tr')].map((row, index) => ({
+          id: row.dataset.id,
+          sort_order: index
+        }));
+
+        fetch("{% url 'update_assignment_order' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ order })
+        })
+        .then(res => res.json())
+        .then(data => console.log('Order updated:', data))
+        .catch(err => {
+          console.error('Update error:', err);
+          alert('Could not update row order. Try again.');
+        });
+      }
+    });
+  });
+
+  const form = document.getElementById('assignment-form');
+  const addBtn = document.getElementById('add-btn');
+  const updateBtn = document.getElementById('update-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const currentUser = `{{ request.user.id }}`;
+
+  document.addEventListener('click', function (e) {
+    const row = e.target.closest('tr');
+    const assignmentId = row?.dataset.id;
+
+    // DELETE
+    if (e.target.classList.contains('delete-btn')) {
+      fetch(`/assignments/delete/${assignmentId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) row.remove();
+      });
+    }
+
+    // EDIT
+    if (e.target.classList.contains('edit-btn')) {
+      fetch(`/assignments/${assignmentId}/json/`)
+        .then(res => res.json())
+        .then(data => {
+          form.assignment_type.value = data.assignment_type;
+          form.status.value = data.status;
+          form.completion.value = data.completion;
+          form.planned_start_date.value = data.planned_start_date;
+          form.planned_end_date.value = data.planned_end_date;
+          form.start_date.value = data.start_date;
+          form.end_date.value = data.end_date;
+
+          [...form.assignee.options].forEach(opt => {
+            opt.selected = parseInt(opt.value) === data.assignee;
+          });
+
+          form.dataset.editingId = assignmentId;
+          addBtn.classList.add('d-none');
+          updateBtn.classList.remove('d-none');
+          cancelBtn.classList.remove('d-none');
+        });
+    }
+
+    // START
+    if (e.target.classList.contains('start-btn')) {
+      fetch(`/assignments/${assignmentId}/start/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          row.querySelector('[data-label="start-date"]').textContent = formatDate(data.assignment.start_date);
+          row.querySelector('[data-label="status"]').textContent = data.assignment.status;
+          console.log("Start date: ",data.assignment.start_date);
+          console.log("End date: ",data.assignment.end_date);
+          console.log("Status: ",data.assignment.status);
+          console.log("--------------------------");
+          e.target.classList.replace('start-btn', 'mark-as-done-btn');
+          e.target.classList.replace('btn-primary', 'btn-danger');
+          e.target.textContent = 'Mark as done';
+        }else{
+          showAssignmentError(data.error || 'Failed to start assignment.');
+        }
+      }).catch(err => {
+        showAssignmentError('Something went wrong while starting the assignment.');
+      });
+    }
+
+    // MARK AS DONE
+    if (e.target.classList.contains('mark-as-done-btn')) {
+      fetch(`/assignments/${assignmentId}/done/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          row.querySelector('[data-label="end-date"]').textContent = formatDate(data.assignment.end_date);
+          row.querySelector('[data-label="status"]').textContent = data.assignment.status;
+          console.log("Start date: ",data.assignment.start_date);
+          console.log("End date: ",data.assignment.end_date);
+          console.log("Status: ",data.assignment.status);
+          e.target.remove(); // Remove the button once task is completed
+        }else{
+          showAssignmentError(data.error || 'Faild to mark the assignment as done.');
+        }
+      }).catch(err => {
+        showAssignmentError('Something went wrong while marking the assignment as done.');
+      });
+    }
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const editingId = form.dataset.editingId;
+    const url = editingId ? `/assignments/update/${editingId}/` : `{% url 'assignment-create-ajax' %}`;
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.errors) return alert(JSON.stringify(data.errors));
+
+      const fullName = `${data.assignee?.first_name || ''} ${data.assignee?.last_name || ''}`.trim();
+      const initials = `${data.assignee?.first_name?.[0] || ''}${data.assignee?.last_name?.[0] || ''}`;
+      const assigneeHTML = data.assignee ? `
+        <div class="me-1 text-center">
+          <div class="avatar" title="${fullName}">${initials}</div>
+        </div>` : '<span class="badge bg-warning text-dark">-</span>';
+
+      const showAction = data.assignee?.id == currentUser;
+      const buttonHTML = showAction ? `
+        <td>
+          ${data.status === 'pending' ? '<button class="btn btn-sm btn-primary start-btn">Start</button>' : ''}
+          ${data.status === 'started' ? '<button class="btn btn-sm btn-danger mark-as-done-btn">Mark as done</button>' : ''}
+        </td>` : '<td></td>';
+
+      const rowHTML = `
+        <td class="drag-handle text-center" style="cursor:pointer;">≡</td>
+        <td>${data.type}</td>
+        <td>${data.status}</td>
+        <td><div class="d-flex flex-wrap align-items-center">${assigneeHTML}</div></td>
+        <td>${data.completion}%</td>
+        <td>${formatDate(data.planned_start_date)}</td>
+        <td>${formatDate(data.planned_end_date)}</td>
+        <td>${formatDate(data.start_date)}</td>
+        <td>${formatDate(data.end_date)}</td>
+        <td>
+          <button class="btn btn-sm btn-primary edit-btn">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+        </td>
+        ${buttonHTML}`;
+
+      if (editingId) {
+        const row = document.querySelector(`tr[data-id="${editingId}"]`);
+        row.innerHTML = rowHTML;
+      } else {
+        const newRow = document.createElement('tr');
+        newRow.dataset.id = data.id;
+        newRow.innerHTML = rowHTML;
+        document.querySelector('#assignment-table tbody').appendChild(newRow);
+      }
+
+      resetForm();
+    });
+  });
+
+  cancelBtn.addEventListener('click', resetForm);
+
+  function showAssignmentError(message) {
+    const errorDiv = document.getElementById('assignment-error');
+    if (errorDiv) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('d-none');
+  
+      // Automatically hide after 5 seconds
+      setTimeout(() => {
+        errorDiv.classList.add('d-none');
+        errorDiv.textContent = '';
+      }, 5000);
+    }
+  }
+
+  function resetForm() {
+    form.reset();
+    delete form.dataset.editingId;
+    addBtn.classList.remove('d-none');
+    updateBtn.classList.add('d-none');
+    cancelBtn.classList.add('d-none');
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
+  }
+
+</script>
+
+    
+{% endblock %}

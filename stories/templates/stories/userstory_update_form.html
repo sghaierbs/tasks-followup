@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h2>{% if object.pk %}Edit{% else %}Create{% endif %} User Story</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="form-group col-md-12 mb-4">
+                    {{ form.title.errors }}
+                    <label for="id_title" class="form-label">{{ form.title.label_tag }}</label>
+                    {{ form.title }}
+                    {% for error in form.title.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_description" class="form-label">{{ form.description.label_tag }}</label>
+                    {{ form.description }}
+                    {% for error in form.description.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_status" class="form-label">{{ form.status.label_tag }}</label>
+                    {{ form.status }}
+                    {% for error in form.status.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_urgency" class="form-label">{{ form.urgency.label_tag }}</label>
+                    {{ form.urgency }}
+                    {% for error in form.urgency.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_planned_start_date" class="form-label">{{ form.planned_start_date.label_tag}}</label>
+                    {{ form.planned_start_date }}
+                    {% for error in form.planned_start_date.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_planned_end_date" class="form-label">{{ form.planned_end_date.label_tag }}</label>
+                    {{ form.planned_end_date }}
+                    {% for error in form.planned_end_date.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group col-md-12 mb-4">
+                    <label for="id_assignee" class="form-label">{{ form.assignee.label_tag }}</label>
+                    {{ form.assignee }}
+                    {% for error in form.assignee.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {{ form.sprint }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success mt-3">Save</button>
+        <!-- 
+            If we are editing a user story, when the user clicks on cancel we should go back to the preview screen of 
+            the user story.
+        -->
+        {% if object.pk %}
+        <a href="{% url 'userstory-detail' object.pk %}" class="btn btn-secondary mt-3">Cancel</a>
+        {% endif %}
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
+        </div>
+        {% endif %}
+    </form>
+    <hr>
+</div>
+{% endblock %}

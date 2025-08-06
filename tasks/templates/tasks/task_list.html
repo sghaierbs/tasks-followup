@@ -1,6 +1,10 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% load task_extras %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -98,7 +102,7 @@
       </thead>
       <tbody>
         {% for task in object_list %}
-          <tr>
+          <tr onclick='window.location.href="{% url 'task-detail' task.pk %}"' style="cursor: pointer;">
             <th scope="row">{{ task.id }}</th>
             <td><a href="{% url 'task-detail' task.pk %}">{{ task.title }}</td>
             <td>{{ task.due_date|date:"d/m/Y" }}</td>
@@ -122,7 +126,23 @@
               {{ task.visibility }}
             </td>
             <td>
-              {{ task.assignee }}
+              <!-- {{ task.assignees }} -->
+              {% if task.assignees %}
+                <div class="d-flex flex-wrap align-items-center">
+                  {% for assignee in task.assignees.all %}
+                    {% with assignee.first_name|slice:":1" as first %}
+                    {% with assignee.last_name|slice:":1" as last %}
+                    <div class="me-1 text-center">
+                      <div class="avatar" title="{{ assignee.get_full_name }}">{{ first }}{{ last }}</div>
+                      <!-- <span class="badge text-dark small">{{ assignee.get_full_name }}</span> -->
+                    </div>
+                    {% endwith %}
+                    {% endwith %}
+                  {% endfor %}
+                </div>
+              {% else %}
+                <span class="badge bg-warning text-dark">-</span>
+              {% endif %}
             </td>
             <td>
               {{ task.created_by }}

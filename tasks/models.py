@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.timezone import now
 from core.models import Trackable, TrackableStatus, TrackableUrgency, TrackableClassification, Event
 from django.contrib.auth.models import User
+from stories.models import UserStory
 
 
 
@@ -32,12 +33,13 @@ class Task(Trackable):
     is_completed = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
-    status = models.ForeignKey(TrackableStatus, on_delete=models.SET_NULL, null=True, default=get_default_status)
-    urgency = models.ForeignKey(TrackableUrgency, on_delete=models.SET_NULL, null=True, default=get_default_urgency)
-    classification = models.ForeignKey(TrackableClassification, on_delete=models.SET_NULL, null=True, default=get_default_classification)
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
-    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='public')
+    status = models.ForeignKey(TrackableStatus, on_delete=models.SET_NULL, null=True, blank=True, default=get_default_status)
+    urgency = models.ForeignKey(TrackableUrgency, on_delete=models.SET_NULL, null=True, blank=True, default=get_default_urgency)
+    classification = models.ForeignKey(TrackableClassification, on_delete=models.SET_NULL, null=True, blank=True, default=get_default_classification)
+    assignees = models.ManyToManyField(User, related_name="assigned_tasks", blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks', blank=True)
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='public', null=True, blank=True)
+    user_story = models.ForeignKey(UserStory, related_name='tasks', on_delete=models.SET_NULL, null=True, blank=True)
     events = GenericRelation(Event)
 
 

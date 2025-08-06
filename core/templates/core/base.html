@@ -1,4 +1,6 @@
 {% load static %}
+
+{% load group_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +21,7 @@
     <!-- Responsive Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'task-list' %}">Taradhi</a>
+            <a class="navbar-brand" href="{% url 'home' %}">Taradhi</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -28,6 +30,20 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link {% if 'home' in request.resolver_match.url_name %}active{% endif %}"  href="{% url 'home' %}">Home</a></li>
                     {% if request.user.is_authenticated %}
+                        {% if request.user|has_group:"sprint_manager" %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if 'sprints' in request.resolver_match.url_name %}active{% endif %}" href="#" id="sprintsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Sprints
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="sprintsDropdown">
+                                    <li><a class="dropdown-item" href="{% url 'current-sprint' %}">Current sprint</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'manage-sprints' %}">Manage Sprints</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link {% if 'sprint' in request.resolver_match.url_name %}active{% endif %}"  href="{% url 'current-sprint' %}">Sprints</a></li>
+                        {% endif %}
+                        
                         <li class="nav-item"><a class="nav-link {% if 'task' in request.resolver_match.url_name %}active{% endif %}"  href="{% url 'task-list' %}">Tasks</a></li>
                         <li class="nav-item"><a class="nav-link {% if 'snippet' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'snippet-list' %}">Snippets</a></li>
                     {% endif %}
@@ -38,14 +54,40 @@
                     <button class="btn btn-outline-primary" type="submit">Search</button>
                 </form>
 
+                {% if request.user.is_authenticated %}
+                    <div class="nav-item dropdown me-3">
+                        <a class="nav-link position-relative" href="#" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell fs-4"></i>
+                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <!-- {{ request.user.notifications.all|length }} -->
+                            {{ unread_notifications|length }}
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" style="width: 420px; max-height: 400px; overflow-y: auto;">
+                        <li><h6 class="dropdown-header">Notifications</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-primary" href="{% url 'notification-list' %}">Show all seen notifications</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for n in unread_notifications %}
+                            <!-- <li><a class="dropdown-item" href="{{ n.url|default:'#' }}">{{ n.message }}</a></li> -->
+                            <li><a class="dropdown-item" href="{% url 'notification-read' n.id %}">{{ n.message }}</a></li>
+                        {% empty %}   
+                            <li id="no-notification"><span class="dropdown-item text-muted">No new notifications</span></li>
+                        {% endfor %}
+                        
+                        </ul>
+                    </div>
+                {% endif %}
+
                 <div class="dropdown">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+                        <img src="{% static 'core/profile-pic.webp' %}" alt="mdo" width="32" height="32" class="rounded-circle">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-small" aria-labelledby="dropdownUser">
-                        <li><a class="dropdown-item" href="#">New project...</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                        <!-- <li><a class="dropdown-item" href="#">New project...</a></li>
+                        <li><a class="dropdown-item" href="#">Settings</a></li>-->
+                        <li><a class="dropdown-item" href="#">{{ user.get_full_name | default:user.username }}</a></li> 
                         <li><hr class="dropdown-divider"></li>
                         {% if request.user.is_authenticated %}
                         <li><a class="dropdown-item" href="{% url 'logout' %}">Sign out</a></li>
@@ -59,11 +101,13 @@
     </nav>
     
     <!-- Main Content -->
-    <div class="container pb-5">
-        {% block content %}
-        <p>Replace this with page content.</p>
-        {% endblock %}
-    </div>
+    {% block parent_content %}
+        <div class="container pb-5">
+            {% block content %}
+            <p>Replace this with page content.</p>
+            {% endblock %}
+        </div>
+    {% endblock %}
     <nav class="mobile-bottom-nav d-md-none fixed-bottom bg-white border-top shadow-sm">
         <div class="d-flex justify-content-around text-center my-20">
           <a href="{% url 'home' %}" class="flex-fill nav-link text-dark small border">
@@ -85,6 +129,52 @@
 
     <!-- Bootstrap JS Bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if request.user.is_authenticated %}
+        <script>
+            const userId = "{{ request.user.id }}";
+            const notificationMenu = document.querySelector('#notificationsDropdown + .dropdown-menu');
+            const notificationCount = document.getElementById('notification-count');
+            const noNotificationPlaceholder = document.getElementById('no-notification');
+        
+            const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+            const socket = new WebSocket(`${wsScheme}://${window.location.host}/ws/notifications/${userId}/`);
+        
+            let count = parseInt(notificationCount?.innerText.trim()) || 0;
+        
+            function updateBadge() {
+                if (count > 0) {
+                    notificationCount.innerText = count;
+                    notificationCount.style.display = 'inline-block';
+                    if (noNotificationPlaceholder) noNotificationPlaceholder.style.display = 'none';
+                } else {
+                    notificationCount.style.display = 'none';
+                    if (noNotificationPlaceholder) noNotificationPlaceholder.style.display = 'block';
+                }
+            }
+        
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                const item = document.createElement('li');
+                item.innerHTML = `<a class="dropdown-item text-wrap" href="${data.url || '#'}">${data.message}</a>`;
+        
+                // Insert the item after the divider
+                const divider = notificationMenu.querySelector('.dropdown-divider');
+                notificationMenu.insertBefore(item, divider.nextSibling);
+        
+                count += 1;
+                updateBadge();
+            };
+        
+            socket.onclose = function(e) {
+                console.warn("WebSocket closed unexpectedly. Reconnecting in 5s...");
+                setTimeout(() => location.reload(), 5000);
+            };
+        
+            updateBadge();  // Set initial state
+        </script>
+    
+    {% endif %}
     
     {% block extra_scripts %}{% endblock %}
 </body>

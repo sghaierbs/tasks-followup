@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+{% load task_extras %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/jsgantt.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div style="position:relative" class="gantt" id="GanttChartDIV"></div>
+</div>
+
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script src="{% static 'tasks/jsgantt.js' %}"></script>
+
+<script>
+
+    var g = new JSGantt.GanttChart(document.getElementById('GanttChartDIV'), 'day');
+    
+    g.setOptions({
+      vCaptionType: 'Complete',  // Set to Show Caption : None,Caption,Resource,Duration,Complete,     
+      vQuarterColWidth: 36,
+      vDateTaskDisplayFormat: 'day dd month yyyy', // Shown in tool tip box
+      vDayMajorDateDisplayFormat: 'mon yyyy - Week ww',// Set format to dates in the "Major" header of the "Day" view
+      vWeekMinorDateDisplayFormat: 'dd mon', // Set format to display dates in the "Minor" header of the "Week" view
+      vLang: 'en',
+      vShowTaskInfoLink: 1, // Show link in tool tip (0/1)
+      vShowEndWeekDate: 0,  // Show/Hide the date for the last day of the week in header for daily
+      vAdditionalHeaders: { // Add data columns to your table
+          status: {
+            title: 'Status'
+          },
+          sprint: {
+            title: 'Sprint'
+          },
+          team: {
+            title: 'Team'
+          }
+        },
+      vUseSingleCell: 10000, // Set the threshold cell per table row (Helps performance for large data.
+      vFormatArr: ['Day', 'Week', 'Month', 'Quarter'], // Even with setUseSingleCell using Hour format on such a large chart can cause issues in some browsers,
+      
+    });
+    
+    // Load from a Json url
+    JSGantt.parseJSON('/sprints/api/gantt-data/', g);
+    
+    // Or Adding  Manually
+   
+    g.AddTaskItemObject({
+      pID: 1,
+      pName: "Define Chart API",
+      pStart: "",
+      pEnd: "",
+      pPlanStart: "",
+      pPlanEnd: "",
+      pClass: "ggroupblack",
+      pLink: "",
+      pMile: 0,
+      pRes: "",
+      pComp: 0,
+      pGroup: 1,
+      pParent: 0,
+      pOpen: 1,
+      pDepend: "",
+      pCaption: "",
+      pNotes: "Some Notes text",
+      team: "Dev",
+      sprint: "Sprint 48"
+    });
+    g.AddTaskItemObject({
+      pID: 11,
+      pName: "Chart Object",
+      pPlanStart: "2025-06-02",
+      pPlanEnd: "2025-06-14",
+      pStart: "2025-06-02",
+      pEnd: "2025-06-15",
+      pClass: "gtaskred",
+      pLink: "",
+      pMile: 0,
+      pRes: "Thekra",
+      pComp: 50,
+      pGroup: 0,
+      pParent: 1,
+      pOpen: 1,
+      pDepend: "",
+      pCaption: "",
+      pNotes: "",
+      team: "Business",
+      sprint: "Sprint 48"
+    });
+    g.AddTaskItemObject({
+      pID: 12,
+      pName: "Modeling data objects",
+      pPlanStart: "2025-06-05",
+      pPlanEnd: "2025-06-16",
+      pStart: "2025-06-05",
+      pEnd: "2025-06-18",
+      pClass: "gtaskred",
+      pLink: "",
+      pMile: 0,
+      pRes: "Naveen",
+      pComp: 20,
+      pGroup: 0,
+      pParent: 1,
+      pOpen: 1,
+      pDepend: 11,
+      pCaption: "",
+      pNotes: "",
+      team: "QA",
+      sprint: "Sprint 48"
+    });
+    
+    g.AddTaskItemObject({
+      pID: 341,
+      pName: "Test Bar Task",
+      pStart: "2025-05-30",
+      pEnd: "2025-06-18",
+      pClass: "gtaskblue",
+      pLink: "",
+      pMile: 0,
+      pRes: "Ahmad",
+      pComp: 60,
+      pGroup: 0,
+      pParent: 1,
+      pOpen: 1,
+      pDepend: "",
+      pCaption: "",
+      pNotes: "",
+      pBarText: "This is a bar text",
+      team: "QA",
+      sprint: "Sprint 48"
+    });
+
+    g.setMaxDate("2025-07-20");
+    g.Draw();
+    
+    </script>
+{% endblock %}

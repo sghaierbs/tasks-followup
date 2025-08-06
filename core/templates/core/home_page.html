@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% load static %}
+{% load task_extras %}
+{% load group_filters %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/jsgantt.css' %}">
+<link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+<style>
+  .gantt-date-cell.highlighted {
+    background-color: rgba(100, 149, 237, 0.4); /* light blue highlight */
+    border: 1px solid #6495ED;
+  }
+  /* this is used to prevent the native selection of the cells while dargging*/
+  #GanttChartDIV td.gantt-date-cell {
+    user-select: none;
+  }
+
+</style>
+{% endblock %}
+
+{% block parent_content %}
+<div class="container-fluid">
+  <select id="sprint-filter" class="form-select mb-3" style="width: auto;">
+    {% for sprint in sprints %}
+      <option value="{{ sprint.id }}" {% if sprint.is_current %}selected{% endif %}>
+        {{ sprint.name }} {% if sprint.is_current %} 🔥{% endif %}
+      </option>
+    {% endfor %}
+  </select>
+    <!-- Spinner -->
+  <div id="loading-spinner" class="text-center my-3" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+    <div style="position:relative" class="gantt" id="GanttChartDIV"></div>
+</div>
+
+<!-- Users and Assignments Section -->
+<div class="container pb-5 mt-5" id="assignments-container">
+  <!-- Dynamically filled by JS -->
+</div>
+
+<div class="modal fade" id="assignmentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'assignment-create-ajax' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Assignment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body"> 
+          <!-- 
+            Prevent the submit default behaviour and make a rest call to create the new assignment
+            Find a solution to fetch the user story id based on the cell (check its parent from the JSON object maybe)
+            once done with the case creation try re-draw the chart without reload 
+           -->
+          <input type="hidden" name="user_story_id" value="{{ user_story.id }}">
+          <div class="mb-3">
+            <label for="id_assignment_type" class="form-label">{{ assignment_form.assignment_type.label_tag }}</label>
+            {{ assignment_form.assignment_type }}
+          </div>
+          <div class="mb-3">
+            <label for="id_assignee" class="form-label">{{ assignment_form.assignee.label_tag }}</label>
+            {{ assignment_form.assignee }}
+          </div>
+          <div class="mb-3">
+            <label for="id_planned_start_date" class="form-label">{{ assignment_form.planned_start_date.label_tag }}</label>
+            {{ assignment_form.planned_start_date }}
+          </div>
+          <div class="mb-3">
+            <label for="id_planned_end_date" class="form-label">{{ assignment_form.planned_end_date.label_tag }}</label>
+            {{ assignment_form.planned_end_date }}
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script src="{% static 'tasks/jsgantt.js' %}"></script>
+<script>
+  let isDragging = false;
+  let highlightedCells = [];
+
+  let g;
+
+  function showSpinner(show) {
+    document.getElementById('loading-spinner').style.display = show ? 'block' : 'none';
+  }
+
+  function loadGanttData(sprintId = 'all') {
+    showSpinner(true);
+
+    const url = new URL("{% url 'sprints-data-json' %}", window.location.origin);
+    if (sprintId !== 'all') {
+      url.searchParams.set('sprint_id', sprintId);
+    }
+    // Clear existing chart content
+    document.getElementById('GanttChartDIV').innerHTML = '';
+
+    g = new JSGantt.GanttChart(document.getElementById('GanttChartDIV'), 'day');
+    if (!g.getDivId()) {
+      console.error('Error: unable to create Gantt chart.');
+      showSpinner(false);
+      return;
+    }
+
+    g.setOptions({
+      vCaptionType: 'Caption',
+      vQuarterColWidth: 36,
+      vDateTaskDisplayFormat: 'day dd month yyyy',
+      vDayMajorDateDisplayFormat: 'mon yyyy - Week ww',
+      vWeekMinorDateDisplayFormat: 'dd mon',
+      vLang: 'en',
+      vShowTaskInfoLink: 1,
+      vShowEndWeekDate: 0,
+      vAdditionalHeaders: {
+        current: { title: 'Current' },
+        sprint: { title: 'Sprint' },
+        team: { title: 'Team' }
+      },
+      vUseSingleCell: 10000,
+      vFormatArr: ['Day', 'Week', 'Month', 'Quarter'],
+    });
+    
+    // Use built-in JSON parser with success & error callbacks
+    
+
+    JSGantt.parseJSON(url, g).then(() => {
+      // Success: data loaded
+      g.setMaxDate("2025-07-20");
+      g.Draw();
+      annotateGanttCellsWithDates();
+      showSpinner(false);
+    }).catch((err) => {
+      console.error('Error loading Gantt data:', error);
+      alert('Failed to load Gantt data. Please try again later.');
+      showSpinner(false);
+    });
+    //showSpinner(false);
+  }
+
+  function convertMonthYearStringToDate(dateString) {
+    // Define a mapping from month abbreviations to their 0-indexed numbers
+    const monthMap = {
+      "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+      "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+    };
+  
+    // Regular expression to match "MMM YYYY" format
+    const regex = /^([A-Za-z]{3})\s(\d{4})$/;
+    const match = dateString.match(regex);
+  
+    if (!match) {
+      console.error("Invalid date string format. Expected 'MMM YYYY' (e.g., 'Jun 2025').");
+      return null; // Return null for invalid format
+    }
+  
+    const monthAbbr = match[1];
+    const year = parseInt(match[2], 10);
+  
+    // Get the 0-indexed month number
+    const monthNumber = monthMap[monthAbbr];
+  
+    if (monthNumber === undefined) {
+      console.error(`Invalid month abbreviation: ${monthAbbr}.`);
+      return null; // Return null if month abbreviation is not recognized
+    }
+  
+    // Create a new Date object. The day is set to 1.
+    // Note: JavaScript Date constructor uses 0-indexed months.
+    const dateObject = new Date(year, monthNumber, 1);
+  
+    // Optional: Validate if the created date is valid (e.g., if year was valid)
+    // This check is good practice, though for valid years and months from our map,
+    // it should generally be valid.
+    if (isNaN(dateObject.getTime())) {
+      console.error(`Could not create a valid date object for: ${dateString}`);
+      return null;
+    }
+  
+    return dateObject;
+  }
+
+  function annotateGanttCellsWithDates() {
+    const chartHead = document.querySelector('#GanttChartDIVchartTableh');
+    const chartBody = document.querySelector('#GanttChartDIVchartTable');
+    if (!chartHead || !chartBody) return;
+
+    const headerRow = chartHead.querySelector('tr.footerdays');
+    const dateCells = Array.from(headerRow.querySelectorAll('td'));
+    const dates = dateCells.map(td => {
+        const day = td.dataset.date;
+        // add exception handling here  
+        return day;
+    });
+    const bodyRows = chartBody.querySelectorAll('tr');
+    bodyRows.forEach(row => {
+        const cells = row.querySelectorAll('td.gtaskcell, td.gtaskcellwkend');
+        cells.forEach((cell, index) => {
+            if (dates[index]) {
+                cell.dataset.date = dates[index];
+                cell.classList.add('gantt-date-cell');
+            }
+        });
+    });
+  }
+
+
+  // Initial load
+  loadGanttData(document.getElementById('sprint-filter').value);
+
+  
+
+  // Adding listener to mouse down event
+  document.getElementById('GanttChartDIV').addEventListener('mousedown', function (e) {
+    const cell = e.target.closest('td.gantt-date-cell');
+    if (!cell) return;
+  
+    const startDate = cell.dataset.date;
+    const startRow = cell.closest('tr');
+    if (!startDate || !startRow) return;
+  
+    window.ganttSelectStart = {
+      date: startDate,
+      row: startRow
+    };
+    isDragging = true;
+  
+    // Clear any previous highlights
+    highlightedCells.forEach(c => c.classList.remove('highlighted'));
+    highlightedCells = [];
+  });
+
+  document.getElementById('GanttChartDIV').addEventListener('mousemove', function (e) {
+    if (!isDragging || !window.ganttSelectStart) return;
+  
+    const cell = e.target.closest('td.gantt-date-cell');
+    if (!cell) return;
+  
+    const currentRow = cell.closest('tr');
+    const endDate = cell.dataset.date;
+    if (!endDate || currentRow !== window.ganttSelectStart.row) return;
+  
+    const start = new Date(window.ganttSelectStart.date);
+    const end = new Date(endDate);
+    const [rangeStart, rangeEnd] = start <= end ? [start, end] : [end, start];
+  
+    // Clear previous highlights
+    highlightedCells.forEach(c => c.classList.remove('highlighted'));
+    highlightedCells = [];
+  
+    const rowCells = currentRow.querySelectorAll('td.gantt-date-cell');
+    rowCells.forEach(td => {
+      const tdDate = new Date(td.dataset.date);
+      if (tdDate >= rangeStart && tdDate <= rangeEnd) {
+        td.classList.add('highlighted');
+        highlightedCells.push(td);
+      }
+    });
+  });
+
+  //adding listener to mouse up event
+  document.getElementById('GanttChartDIV').addEventListener('mouseup', function (e) {
+    const cell = e.target.closest('td.gantt-date-cell');
+    if (!cell || !window.ganttSelectStart) return;
+  
+    const currentRow = cell.closest('tr');
+    if (currentRow !== window.ganttSelectStart.row) return;
+  
+    const start = new Date(window.ganttSelectStart.date);
+    const end = new Date(cell.dataset.date);
+    const [rangeStart, rangeEnd] = start <= end ? [start, end] : [end, start];
+  
+    openAssignmentModal(rangeStart.toISOString().slice(0, 10), rangeEnd.toISOString().slice(0, 10));
+  
+    isDragging = false;
+    window.ganttSelectStart = null;
+    // Clear previous highlights
+    highlightedCells.forEach(c => c.classList.remove('highlighted'));
+    highlightedCells = [];
+  });
+
+function openAssignmentModal(startDate, endDate) {
+  document.getElementById('id_planned_start_date').value = startDate;
+  document.getElementById('id_planned_end_date').value = endDate;
+  const modal = new bootstrap.Modal(document.getElementById('assignmentModal'));
+  modal.show();
+}
+  // Handle dropdown change
+  document.getElementById('sprint-filter').addEventListener('change', function () {
+    loadGanttData(this.value);
+
+    const sprintId = this.value;
+    const url = new URL("{% url 'assignments-by-sprint-json' %}", window.location.origin);
+   
+    url.searchParams.set('sprint_id', sprintId);
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      renderUsers(data.data);
+    });
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sprint-filter').dispatchEvent(new Event('change'));
+  });
+
+
+  function renderUsers(users) {
+    console.log("Users: ", users)
+    const container = document.getElementById('assignments-container');
+    container.innerHTML = '';
+    let row;
+
+    users.forEach((user, index) => {
+      console.log("Content of one user: ", user)
+      if (index % 4 === 0) {
+        row = document.createElement('div');
+        row.className = 'row mb-4';
+        container.appendChild(row);
+      }
+
+      const firstInitial = user.user.first_name.charAt(0) || '';
+      const lastInitial = user.user.last_name.charAt(0) || '';
+      const shortName = user.user.full_name.length > 20 ? user.user.full_name.slice(0, 20) + '...' : user.user.full_name;
+
+      const assignmentCount = user.assignments.length;
+
+      const col = document.createElement('div');
+      col.className = 'col-sm-3';
+      col.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">
+              <div class="d-flex flex-wrap align-items-center">
+                <div class="me-1 text-center">
+                  <div class="avatar" title="${user.user}">${firstInitial}${lastInitial}</div>
+                </div>
+                ${shortName}
+              </div>
+            </h5>
+            <p class="card-text">${assignmentCount} Currently assigned task${assignmentCount !== 1 ? 's' : ''}.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+          </div>
+        </div>
+      `;
+      row.appendChild(col);
+    });
+  }
+</script>
+
+
+{% endblock %}

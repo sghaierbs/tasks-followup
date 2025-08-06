@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Delete Sprint</h1>
+
+  <p>Are you sure you want to delete <strong>{{ sprint.name }}</strong>?</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger mt-3">Delete <i class="bi bi-trash"></i></button>
+    <a href="{% url 'sprint-detail' object.pk %}" class="btn btn-secondary mt-3">Cancel</a>
+  </form>
+{% endblock %}

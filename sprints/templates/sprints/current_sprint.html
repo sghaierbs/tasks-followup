@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+{% load group_filters %}
+{% load filters %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  
+    <!-- Sprint Dropdown Form -->
+    <form method="get" class="d-flex align-items-center mb-0">
+      <label class="me-2 mb-0" for="sprintSelect">Sprint</label>
+      <select class="form-select me-3" id="sprintSelect" name="sprint" onchange="this.form.submit()" style="min-width: 250px;">
+        <option selected disabled>Select a Sprint</option>
+        {% for sprint in sprints %}
+          <option value="{{ sprint.id }}" {% if sprint == selected_sprint %}selected{% endif %}>
+              {{ sprint.name }}{% if sprint.is_current %} 🔥{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  
+    <!-- Create User Story Button -->
+    <a href="{% url 'userstory-create' %}?sprint={{ selected_sprint.id }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-1"></i> User Story
+    </a>
+  
+</div>
+
+{% if selected_sprint %}
+  <h5 class="mt-4">User Stories in "{{ selected_sprint.name|truncate:90 }}"</h5>
+    
+    {% if stories.exists %}
+        <div class="d-none d-md-block">
+            <table class="table table-hover">
+            <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Assignee</th>
+                <th scope="col">Status</th>
+                <th scope="col">Start date</th>
+                <th scope="col">End date</th>
+                {% if request.user|has_group:"sprint_manager" %}
+                    <th scope="col">Actions</th>
+                {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for story in stories %}
+                <tr style="cursor: pointer;">
+                    <th scope="row">{{ story.id }}</th>
+                    <td><a href="{% url 'userstory-detail' story.pk %}">{{ story.title|truncate:90 }}</td>
+                    <td>
+                        <div class="col text-left">
+                            {% if story.assignee %}
+                              <div class="d-flex flex-wrap align-items-center">
+                                  {% with story.assignee.first_name|slice:":1" as first %}
+                                  {% with story.assignee.last_name|slice:":1" as last %}
+                                  <div class="me-1 text-center">
+                                    <div class="avatar" title="{{ story.assignee.get_full_name }}">{{ first }}{{ last }}</div>
+                                  </div>
+                                  {% endwith %}
+                                  {% endwith %}
+                              </div>
+                            {% else %}
+                              <span class="badge bg-warning text-dark">-</span>
+                            {% endif %}
+                        </div>
+                        
+                    </td>
+                    <td><span class="badge bg-warning text-dark">{{ story.status }}</span></td>
+                    <td>{{ story.planned_start_date|date:"d/m/Y" }}</td>
+                    <td>{{ story.planned_end_date|date:"d/m/Y" }}</td>
+                    {% if request.user|has_group:"sprint_manager" %}
+                    <td>
+                        <form method="post" action="{% url 'userstory-delete' story.id %}" class="d-inline"
+                                onsubmit="return confirm('Are you sure you want to delete this user story?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-danger p-0" title="Delete">
+                                <i class="bi bi-trash-fill fs-5"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No user stories available.</div>
+    {% endif %}
+    <nav class="mt-2">
+    <ul class="pagination justify-content-center">
+        
+        {# Previous Page Link #}
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+        </li>
+        {% endif %}
+    
+        {# First page #}
+        {% if page_obj.number > 3 %}
+        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+        {% if page_obj.number > 4 %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        {% endif %}
+    
+        {# Page Range Around Current Page #}
+        {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+        {% endif %}
+        {% endfor %}
+    
+        {# Last page #}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:-2 %}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:-3 %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
+        {% endif %}
+    
+        {# Next Page Link #}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+        </li>
+        {% endif %}
+    
+    </ul>
+    </nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load filters %}
+{% block content %}
+
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mt-4">Sprints</h5>
+    <!-- Create Sprint Button -->
+    <a href="{% url 'sprint-create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Sprint
+    </a>
+</div>
+
+    
+    {% if sprints %}
+        <div class="d-none d-md-block">
+            <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Start date</th>
+                    <th scope="col">End date</th>
+                    <th scope="col" class="text-center">Current Sprint</th>
+                    <th scope="col" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sprint in sprints %}
+                <tr style="cursor: pointer;">
+                    <th scope="row">{{ sprint.id }}</th>
+                    <td><a href="{% url 'sprint-detail' sprint.pk %}">{{ sprint.name|truncate:90 }}</td>
+                    <td>{{ sprint.planned_start_date|date:"d/m/Y" }}</td>
+                    <td>{{ sprint.planned_end_date|date:"d/m/Y" }}</td>
+                    <td class="text-center">{% if sprint.is_current %} 🔥{% endif %}</td>
+                    <td class="text-center">
+                        <a href="{% url 'sprint-update' sprint.pk %}" class="btn btn-warning"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'sprint-delete' sprint.id %}" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+                    </td>
+                    <!-- <td><a href="{% url 'sprint-delete' sprint.pk %}"><i class="bi bi-trash-fill fs-5"></i></a></td> -->
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No sprints yet.</div>
+    {% endif %}
+    <nav class="mt-2">
+    <ul class="pagination justify-content-center">
+        
+        {# Previous Page Link #}
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+        </li>
+        {% endif %}
+    
+        {# First page #}
+        {% if page_obj.number > 3 %}
+        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+        {% if page_obj.number > 4 %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        {% endif %}
+    
+        {# Page Range Around Current Page #}
+        {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+        {% endif %}
+        {% endfor %}
+    
+        {# Last page #}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:-2 %}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:-3 %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
+        {% endif %}
+    
+        {# Next Page Link #}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+        </li>
+        {% endif %}
+    
+    </ul>
+    </nav>
+{% endblock %}

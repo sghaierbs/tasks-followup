@@ -1,6 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% load task_extras %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+{% endblock %}
+
 
 {% block content %}
 <div class="container py-4">
@@ -15,64 +21,133 @@
         <div class="col-md-4">          
           <div class="col-md-12">
             <ul class="list-group list-group-flush mb-3">
-              <li class="list-group-item mb-4">
-                <strong>Assignee:</strong>
-                {% if object.assignee %}
-                  <span class="badge text-dark">{{object.assignee}}</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark">-</span>
-                {% endif %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-people me-2"></i>
+                  <span class="fs-6">Assignee:</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.assignees %}
+                      <div class="d-flex flex-wrap align-items-center">
+                        {% for assignee in object.assignees.all %}
+                          {% with assignee.first_name|slice:":1" as first %}
+                          {% with assignee.last_name|slice:":1" as last %}
+                          <div class="me-1 text-center">
+                            <div class="avatar" title="{{ assignee.get_full_name }}">{{ first }}{{ last }}</div>
+                            <!-- <span class="badge text-dark small">{{ assignee.get_full_name }}</span> -->
+                          </div>
+                          {% endwith %}
+                          {% endwith %}
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
-              <li class="list-group-item mb-4">
-                <strong>Status:</strong>
-                {% if object.status %}
-                  <span class="badge {{ task.status|status_class }}">{{object.status}}</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark">Pending</span>
-                {% endif %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span class="fs-6">Status</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.status %}
+                      <span class="badge {{ task.status|status_class }}">{{object.status}}</span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
-              <li class="list-group-item mb-4">
-                <strong>Classification:</strong>
-                {% if object.classification %}
-                  <span class="badge text-dark">{{object.classification}}</span>
-                {% else %}
-                  <span class="badge">-</span>
-                {% endif %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-eye me-2"></i>
+                    <span class="fs-6">Visibility</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if task.visibility == 'public' %}
+                      <span class="badge bg-success">{{task.visibility}}</span>
+                    {% else %}
+                      <span class="badge bg-secondary">{{task.visibility}}</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
-              <li class="list-group-item mb-4">
-                <strong>Urgency:</strong>
-                {% if object.urgency %}
-                  <span class="badge text-dark">{{object.urgency}}</span>
-                {% else %}
-                  <span class="badge">-</span>
-                {% endif %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-card-list me-2"></i>
+                    <span class="fs-6">Classification</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.classification %}
+                      <span class="badge text-dark">{{object.classification}}</span>
+                    {% else %}
+                      <span class="badge">-</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
-              <li class="list-group-item mb-4">
-                <strong>Is completed:</strong>
-                {% if object.is_completed %}
-                  <span class="badge">{{ object.is_completed|yesno:"✅,❌" }}</span>
-                {% else %}
-                  <span class="badge text-dark">-</span>
-                {% endif %}
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-exclamation-diamond me-2"></i>
+                    <span class="fs-6">Urgency</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.urgency %}
+                      <span class="badge text-dark">{{object.urgency}}</span>
+                    {% else %}
+                      <span class="badge">-</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
-              
-              <li class="list-group-item mb-4">
-                <strong>Visibility:</strong> 
-                {% if task.visibility == 'public' %}
-                  <span class="badge bg-success">{{task.visibility}}</span>
-                {% else %}
-                  <span class="badge bg-secondary">{{task.visibility}}</span>
-                {% endif %}
-              </li>
-
-              <li class="list-group-item mb-4">
-                <strong>Due Date:</strong> 
-                <span class="badge text-dark">{{ object.due_date|date:"d/m/Y" }}</span>
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    <span class="fs-6">Completed ?</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.is_completed %}
+                      <span class="badge text-dark">{{ object.is_completed|yesno:"Yes,No" }}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </li>      
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span class="fs-6">Due Date</span>
+                  </div>
+                  <div class="col text-left">
+                    {% if object.due_date %}
+                      <span class="badge text-dark">{{ object.due_date|date:"d/m/Y" }}</span>
+                    {% else %}
+                      <span class="badge text-dark">-</span>
+                    {% endif %}
+                  </div>
+                </div>
               </li>
               {% if object.completed_at %}
-              <li class="list-group-item mb-4">
-                <strong>Completed At:</strong> 
-                <span class="badge text-dark">{{object.completed_at}}</span>
+              <li class="list-group-item">
+                <div class="row">
+                  <div class="col text-left">
+                    <i class="bi bi-calendar2-check me-2"></i>
+                    <span class="fs-6">Completed At</span>
+                  </div>
+                  <div class="col text-left">
+                    <span class="badge text-dark">{{object.completed_at}}</span>
+                  </div>
+                </div>
               </li>
               {% endif %}
             </ul>
@@ -81,8 +156,8 @@
       </div>
       <div class="row" style="margin-top: 30px;">
         <div class="col-md-6 mt-4">
-          <a href="{% url 'task-list' %}" class="btn btn-secondary">← Back to Task List</a>
-          <a href="{% url 'task-edit' task.pk %}" class="btn btn-primary me-2">Edit</a>
+          <a href="{% url 'task-list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-square me-2"></i> Back to Task List</a>
+          <a href="{% url 'task-edit' task.pk %}" class="btn btn-primary me-2"><i class="bi bi-pencil me-2"></i> Edit</a>
         </div>
         <div class="col-md-6 mt-4">
           {% if not object.is_completed %}
