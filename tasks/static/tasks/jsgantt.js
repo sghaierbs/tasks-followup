@@ -394,6 +394,16 @@
                         draw_utils_1.newNode(vTmpCell, "div", null, null, date_utils_1.formatDateStr(vTmpDate, this.vDayMinorDateDisplayFormat, this.vLangs[this.vLang]), vColWidth);
                         vNumCols++;
                     }
+                    /**
+                     * Code added by sghaier to allow adding data-date attribute to the header in order to be able to use drag cells to create tasks from 
+                     * within the gantt chart
+                     */
+                    const Dyear = vTmpDate.getFullYear();
+                    const Dmonth = String(vTmpDate.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+                    const Dday = String(vTmpDate.getDate()).padStart(2, '0');
+                    var data_date =  `${Dyear}-${Dmonth}-${Dday}`;
+                    vTmpCell.setAttribute('data-date', data_date);
+                    // code ends before this comment
                     vTmpDate.setDate(vTmpDate.getDate() + 1);
                 }
                 else if (this.vFormat == "week") {
@@ -464,6 +474,7 @@
             var vTmpDiv = draw_utils_1.newNode(vRightTable, "div", this.vDivId + "gchartbody", "gchartgrid gcontainercol");
             this.setChartBody(vTmpDiv);
             var vTmpTab = draw_utils_1.newNode(vTmpDiv, "table", this.vDivId + "chartTable", "gcharttable", null, vTaskLeftPx);
+            console.log("vTmpTab ",vTmpTab);
             this.setChartTable(vTmpTab);
             draw_utils_1.newNode(vTmpDiv, "div", null, "rhscrpad", null, null, vTaskLeftPx + 1);
             var vTmpTBody = draw_utils_1.newNode(vTmpTab, "tbody");
@@ -479,7 +490,18 @@
                 bd = new Date();
                 console.info("before tasks loop", bd);
             }
+            //console.log("vTaskList ",this.vTaskList);
             for (i = 0; i < this.vTaskList.length; i++) {
+                // console.log("getBarText ",this.vTaskList[i].getBarText());
+                // console.log("getOriginalID ",this.vTaskList[i].getOriginalID());
+                // console.log("getID ",this.vTaskList[i].getID());
+                console.log("Iteration:",i," | getName ",this.vTaskList[i].getName());
+                // console.log("getParent ",this.vTaskList[i].getParent());
+                // console.log("getAllData ",this.vTaskList[i].getAllData());
+                if (this.vTaskList[i].getAllData().pDataObject.userstoryid){
+                    console.log("-------- this is an assignment ",this.vTaskList[i].getAllData().pDataObject.userstoryid);
+                }
+
                 var curTaskStart = this.vTaskList[i].getStart() ? this.vTaskList[i].getStart() : this.vTaskList[i].getPlanStart();
                 var curTaskEnd = this.vTaskList[i].getEnd() ? this.vTaskList[i].getEnd() : this.vTaskList[i].getPlanEnd();
                 var vTaskLeftPx_1 = general_utils_1.getOffset(vMinDate, curTaskStart, vColWidth, this.vFormat, this.vShowWeekends);
@@ -650,6 +672,12 @@
             else {
                 vTmpTFoot.appendChild(vDateRow.cloneNode(true));
             }
+            for (i = 0; i < this.vTaskList.length; i++) {
+                console.log("TASK DIV ", this.vTaskList[i].getCellDiv());
+            }
+
+            console.log("this.vTaskList ", this.vTaskList);
+            console.log("vRightTable ", vRightTable);
             return { vRightTable: vRightTable };
         };
         this.drawColsChart = function (vNumCols, vTmpRow, taskCellWidth, pStartDate, pEndDate) {
@@ -735,6 +763,11 @@
             /**
              * CHART GRID
              */
+            console.log("vTaskLeftPx ",vTaskLeftPx);
+            console.log("vTmpContentTabWrapper ",vTmpContentTabWrapper);
+            console.log("gChartLbl ",gChartLbl);
+            console.log("gListLbl ",gListLbl);
+            console.log("vSingleCell ",vSingleCell);
             var vRightTable = this.drawCharBody(vTaskLeftPx, vTmpContentTabWrapper, gChartLbl, gListLbl, vMinDate, vMaxDate, vSingleCell, vNumCols, vColWidth, vDateRow).vRightTable;
             if (this.vDebug) {
                 var ad = new Date();
