@@ -16,10 +16,10 @@ import notifications.routing
 
 if 'DJANGO_SETTINGS_MODULE' not in os.environ:
     os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.prod'  # default production for WSGI
-    print("------------PROD---------------------")
+    print("------------ASGI PROD---------------------")
 else:
     os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.dev'  # default production for WSGI
-    print("------------DEV---------------------")
+    print("------------ASGI DEV---------------------")
 
 
 django_asgi_app = get_asgi_application()
