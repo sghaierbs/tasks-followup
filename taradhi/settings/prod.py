@@ -5,7 +5,12 @@ DEBUG = True
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-secret-key')
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = [
+    'tasks-followup.com',
+    'www.tasks-followup.com',
+    'localhost',           # optional, for local access
+    '127.0.0.1',           # optional, for local access
+]
 CSRF_TRUSTED_ORIGINS = ['https://tasks-followup.com']
 
 
