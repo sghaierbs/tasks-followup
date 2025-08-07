@@ -59,7 +59,6 @@
                         <a class="nav-link position-relative" href="#" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell fs-4"></i>
                         <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            <!-- {{ request.user.notifications.all|length }} -->
                             {{ unread_notifications|length }}
                             <span class="visually-hidden">unread messages</span>
                         </span>
@@ -70,7 +69,6 @@
                         <li><a class="dropdown-item text-primary" href="{% url 'notification-list' %}">Show all seen notifications</a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% for n in unread_notifications %}
-                            <!-- <li><a class="dropdown-item" href="{{ n.url|default:'#' }}">{{ n.message }}</a></li> -->
                             <li><a class="dropdown-item" href="{% url 'notification-read' n.id %}">{{ n.message }}</a></li>
                         {% empty %}   
                             <li id="no-notification"><span class="dropdown-item text-muted">No new notifications</span></li>
@@ -85,8 +83,6 @@
                         <img src="{% static 'core/profile-pic.webp' %}" alt="mdo" width="32" height="32" class="rounded-circle">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-small" aria-labelledby="dropdownUser">
-                        <!-- <li><a class="dropdown-item" href="#">New project...</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>-->
                         {% if request.user.is_authenticated %}
                         <li><a class="dropdown-item" href="#">{{ user.get_full_name | default:user.username }}</a></li> 
                         <li><hr class="dropdown-divider"></li>
