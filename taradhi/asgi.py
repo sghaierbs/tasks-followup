@@ -13,16 +13,15 @@ from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddlewareStack
 import notifications.routing
 
-
+# Only set the environment variable if it's not already defined
 if 'DJANGO_SETTINGS_MODULE' not in os.environ:
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.prod'  # default production for WSGI
-    print("------------ASGI PROD---------------------")
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.prod'
+    print("------------ASGI DEFAULT: PROD---------------------")
 else:
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'taradhi.settings.dev'  # default production for WSGI
-    print("------------ASGI DEV---------------------")
-
+    print(f"------------ASGI USING: {os.environ['DJANGO_SETTINGS_MODULE']} ---------------------")
 
 django_asgi_app = get_asgi_application()
+
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
     "websocket": AuthMiddlewareStack(
